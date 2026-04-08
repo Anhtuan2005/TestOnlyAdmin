@@ -1,0 +1,801 @@
+﻿@model HubCinemaAdmin.Models.CustomSeatLayoutViewModel
+
+@{
+    ViewData["Title"] = ViewBag.HasExistingLayout == true ? "Xem Layout Ghế" : "Tạo Ma Trận Ghế";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    bool hasExistingLayout = ViewBag.HasExistingLayout == true;
+    string existingLayoutJson = ViewBag.ExistingLayoutJson as string ?? "";
+}
+
+@if (hasExistingLayout)
+{
+    <!-- Hiển thị layout hiện có -->
+    <h2 class="mb-4 fw-bold text-primary">Xem Layout Ghế - Phòng @Model.IdRoom</h2>
+    
+    @if (!string.IsNullOrEmpty(ViewBag.Message as string))
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> @ViewBag.Message
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5><i class="bi bi-grid-3x3-gap"></i> Layout hiện tại</h5>
+                <div>
+                    <button class="btn btn-warning" onclick="toggleEditMode()" id="editBtn">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa
+                    </button>
+                    <a href="@Url.Action("EditCinema", "CinemaManagement", new { idCinema = Model.MaRap })" 
+                       class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+            </div>
+
+            <!-- Hiển thị layout -->
+            <div id="existingLayoutDisplay">
+                <div class="seat-grid mb-4" id="existingSeatMatrix"></div>
+                <div class="screen-wrapper">
+                    <div class="screen"></div>
+                </div>
+            </div>
+
+            <!-- Form chỉnh sửa (ẩn ban đầu) -->
+            <div id="editLayoutForm" style="display: none;">
+                <div class="card border-warning">
+                    <div class="card-body">
+                        <h6 class="text-warning mb-3">Chỉnh sửa Layout</h6>
+                        
+                        <form asp-action="Create" method="post">
+                            <input type="hidden" asp-for="IdRoom" />
+                            <input type="hidden" asp-for="MaRap" />
+                            <input type="hidden" asp-for="HasExistingLayout" value="true" />
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label for="editRows" class="form-label">Số hàng:</label>
+                                    <input type="number" id="editRows" class="form-control" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="editCols" class="form-label">Số cột:</label>
+                                    <input type="number" id="editCols" class="form-control" />
+                                </div>
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <button type="button" id="regenerateMatrix" class="btn btn-success me-2">
+                                        <i class="bi bi-arrow-clockwise"></i> Tạo lại ma trận
+                                    </button>
+                                    <div class="form-check form-switch me-3">
+                                        <input class="form-check-input" type="checkbox" id="editPairModeToggle">
+                                        <label class="form-check-label" for="editPairModeToggle">Ghế đôi</label>
+                                    </div>
+                                    <!-- ✅ Thêm tùy chọn thứ tự ghế -->
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="editSeatOrderToggle">
+                                        <label class="form-check-label" for="editSeatOrderToggle">Đánh số từ phải → trái</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="seat-grid mb-4" id="editSeatMatrix"></div>
+                            <div class="screen-wrapper">
+                                <div class="screen">Màn hình</div>
+                            </div>
+
+                            <input type="hidden" asp-for="LayoutJson" id="EditLayoutJson" />
+
+                            <div id="editSeatTypeConfig" style="display:none">
+                                <div class="card mt-3">
+                                    <div class="card-body">
+                                        <h6 class="mb-3">Cấu hình loại ghế:</h6>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-sm">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Hàng</th>
+                                                        <th>Loại ghế</th>
+                                                        <th>Giá (VND)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="editSeatTypeRows"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-check-circle"></i> Cập nhật Layout
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleEditMode()">
+                                    <i class="bi bi-x-circle"></i> Hủy
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Form tạo mới layout (giữ nguyên code hiện tại) -->
+    <h2 class="mb-4 fw-bold text-primary">Tạo Ma Trận Ghế - Phòng @Model.IdRoom</h2>
+
+    @if (!string.IsNullOrEmpty(ViewBag.Message as string))
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> @ViewBag.Message
+        </div>
+    }
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body d-flex align-items-end gap-4 flex-wrap">
+            <div>
+                <label for="rows" class="form-label">Số hàng:</label>
+                <input type="number" id="rows" class="form-control" placeholder="VD: 10" style="width:120px;" />
+            </div>
+
+            <div>
+                <label for="cols" class="form-label">Số cột:</label>
+                <input type="number" id="cols" class="form-control" placeholder="VD: 16" style="width:120px;" />
+            </div>
+
+            <div class="mt-auto">
+                <button id="generateMatrix" class="btn btn-success">
+                    <i class="bi bi-grid-3x3-gap-fill me-1"></i> Tạo ma trận
+                </button>
+            </div>
+
+            <div class="form-check form-switch mt-auto">
+                <input class="form-check-input" type="checkbox" role="switch" id="pairModeToggle">
+                <label class="form-check-label" for="pairModeToggle">Chế độ ghế đôi</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="seat-grid mb-4" id="seatMatrix"></div>
+
+    <div class="screen-wrapper">
+        <div class="screen">Màn hình</div>
+    </div>
+
+    <form asp-action="Create" method="post" class="mt-4">
+        <input type="hidden" asp-for="IdRoom" />
+        <input type="hidden" asp-for="MaRap" />
+        <input type="hidden" asp-for="HasExistingLayout" value="false" />
+        <input type="hidden" asp-for="LayoutJson" id="LayoutJson" />
+
+        <div id="seatTypeConfig" style="display:none">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h4 class="mb-3 text-secondary">Cấu hình loại ghế theo hàng:</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Hàng ghế (A-Z)</th>
+                                    <th>Loại ghế</th>
+                                    <th>Giá (VND)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="seatTypeRows"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-4">
+            <i class="bi bi-check-circle-fill me-1"></i> Lưu Ma Trận Ghế
+        </button>
+        <a href="@Url.Action("EditCinema", "CinemaManagement", new { idCinema = Model.MaRap })" 
+           class="btn btn-secondary mt-4">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </form>
+}
+
+<style>
+    .seat-grid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+    .seat-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .seat {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        border: 2px solid #dee2e6;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: center;
+        line-height: 36px;
+        cursor: pointer;
+        user-select: none;
+        transition: 0.2s;
+    }
+    .seat:hover {
+        background-color: #e2e6ea;
+        border-color: #adb5bd;
+    }
+    .seat.selected {
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+        font-weight: bold;
+    }
+    .seat.paired {
+        background-color: #ff69b4;
+        border-color: #ff69b4;
+        color: white;
+    }
+    .seat.vip {
+        background-color: #ffc107;
+        border-color: #ffc107;
+        color: black;
+    }
+    .seat.double {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+    .seat.existing {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: white;
+    }
+    .row-label {
+        width: 26px;
+        font-weight: bold;
+        text-align: center;
+        color: #495057;
+    }
+    .screen-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+    .screen {
+        width: 60%;
+        height: 8px;
+        background: linear-gradient(to right, #f90, #f90);
+        border-radius: 4px;
+        position: relative;
+    }
+    .screen::after {
+        content: "Màn hình";
+        position: absolute;
+        top: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 13px;
+        font-weight: 500;
+        color: #888;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        let pairMode = false;
+        let firstSeatForPair = null;
+        let editMode = false;
+        let editRightToLeft = false; // ✅ Biến để theo dõi thứ tự ghế
+
+        // Render existing layout nếu có
+        @if (hasExistingLayout && !string.IsNullOrEmpty(existingLayoutJson))
+        {
+            <text>
+            document.addEventListener('DOMContentLoaded', function() {
+                try {
+                    const existingLayout = @Html.Raw(existingLayoutJson);
+                    renderExistingLayout(existingLayout);
+                } catch (e) {
+                    console.error('Error rendering existing layout:', e);
+                    document.getElementById('existingSeatMatrix').innerHTML = 
+                        '<div class="alert alert-danger">Lỗi hiển thị layout: ' + e.message + '</div>';
+                }
+            });
+            </text>
+        }
+
+        function renderExistingLayout(layout) {
+            const container = document.getElementById('existingSeatMatrix');
+            container.innerHTML = '';
+
+            if (!layout || !Array.isArray(layout)) {
+                container.innerHTML = '<div class="alert alert-warning">Layout không hợp lệ</div>';
+                return;
+            }
+
+            layout.forEach((row, rowIndex) => {
+                const rowDiv = document.createElement('div');
+                rowDiv.classList.add('seat-row');
+
+                const rowLabel = String.fromCharCode(65 + (layout.length - 1 - rowIndex));
+                
+                // Label trái
+                const labelLeft = document.createElement('div');
+                labelLeft.classList.add('row-label');
+                labelLeft.textContent = rowLabel;
+                rowDiv.appendChild(labelLeft);
+
+                // Seats
+                if (Array.isArray(row)) {
+                    row.forEach((seatData, colIndex) => {
+                        const seat = document.createElement('div');
+                        seat.classList.add('seat', 'existing');
+
+                        if (seatData) {
+                            if (typeof seatData === 'string' && seatData.includes('+')) {
+                                // ✅ Ghế đôi - hiển thị số ghế đầu tiên
+                                const [seat1, seat2] = seatData.split('+');
+                                const seatNumber = seat1.match(/\d+/)[0]; // Lấy số từ tên ghế
+                                seat.textContent = seatNumber;
+                                seat.classList.add('paired');
+                                seat.title = `Ghế đôi: ${seatData}`;
+                            } else {
+                                // ✅ Ghế đơn - hiển thị số ghế từ tên ghế
+                                const seatNumber = seatData.match(/\d+/)[0]; // Lấy số từ tên ghế
+                                seat.textContent = seatNumber;
+                                seat.title = seatData;
+                            }
+                        } else {
+                            // Không có ghế
+                            seat.style.visibility = 'hidden';
+                        }
+
+                        rowDiv.appendChild(seat);
+                    });
+                }
+
+                // Label phải
+                const labelRight = document.createElement('div');
+                labelRight.classList.add('row-label');
+                labelRight.textContent = rowLabel;
+                rowDiv.appendChild(labelRight);
+
+                container.appendChild(rowDiv);
+            });
+        }
+
+        function toggleEditMode() {
+            const displayDiv = document.getElementById('existingLayoutDisplay');
+            const editDiv = document.getElementById('editLayoutForm');
+            const editBtn = document.getElementById('editBtn');
+
+            if (editMode) {
+                // Cancel edit
+                displayDiv.style.display = 'block';
+                editDiv.style.display = 'none';
+                editBtn.innerHTML = '<i class="bi bi-pencil"></i> Chỉnh sửa';
+                editMode = false;
+            } else {
+                // Start edit
+                displayDiv.style.display = 'none';
+                editDiv.style.display = 'block';
+                editBtn.innerHTML = '<i class="bi bi-x-circle"></i> Hủy';
+                editMode = true;
+                
+                // Load existing data to edit form
+                @if (hasExistingLayout && !string.IsNullOrEmpty(existingLayoutJson))
+                {
+                    <text>
+                    try {
+                        const existingLayout = @Html.Raw(existingLayoutJson);
+                        loadLayoutToEdit(existingLayout);
+                    } catch (e) {
+                        console.error('Error loading layout for edit:', e);
+                    }
+                    </text>
+                }
+            }
+        }
+
+        function loadLayoutToEdit(layout) {
+            if (!layout || !Array.isArray(layout)) return;
+
+            const rows = layout.length;
+            const cols = layout[0] ? layout[0].length : 0;
+            
+            document.getElementById('editRows').value = rows;
+            document.getElementById('editCols').value = cols;
+            
+            createEditMatrix(rows, cols, layout);
+        }
+
+        function createEditMatrix(rows, cols, existingLayout = null) {
+            const seatMatrix = document.getElementById('editSeatMatrix');
+            const seatTypeRows = document.getElementById('editSeatTypeRows');
+            seatMatrix.innerHTML = "";
+            seatTypeRows.innerHTML = "";
+
+            // ✅ Lấy trạng thái thứ tự ghế
+            editRightToLeft = document.getElementById('editSeatOrderToggle').checked;
+
+            for (let r = rows - 1; r >= 0; r--) {
+                const rowDiv = document.createElement("div");
+                rowDiv.classList.add("seat-row");
+
+                const rowLabel = String.fromCharCode(65 + r);
+                const labelLeft = document.createElement("div");
+                labelLeft.classList.add("row-label");
+                labelLeft.textContent = rowLabel;
+                rowDiv.appendChild(labelLeft);
+
+                for (let c = 0; c < cols; c++) {
+                    const seat = document.createElement("div");
+                    seat.classList.add("seat");
+
+                    // ✅ Tính số ghế dựa theo thứ tự
+                    const seatNumber = editRightToLeft ? (cols - c) : (c + 1);
+                    const seatName = `${rowLabel}${seatNumber}`;
+                    
+                    seat.textContent = seatNumber;
+                    seat.dataset.name = seatName;
+                    seat.dataset.col = c; // Lưu vị trí cột thực tế
+                    seat.title = seatName;
+
+                    // ✅ Sửa logic load existing data - mapping theo tên ghế
+                    if (existingLayout && existingLayout[rows - 1 - r] && existingLayout[rows - 1 - r][c]) {
+                        const seatData = existingLayout[rows - 1 - r][c];
+                        
+                        // Kiểm tra xem tên ghế hiện tại có khớp với data không
+                        if (seatData) {
+                            let shouldSelect = false;
+                            
+                            if (typeof seatData === 'string' && seatData.includes('+')) {
+                                // Ghế đôi
+                                const [seat1Name, seat2Name] = seatData.split('+');
+                                if (seatName === seat1Name || seatName === seat2Name) {
+                                    seat.classList.add("selected", "paired");
+                                    shouldSelect = true;
+                                    
+                                    if (seatName === seat1Name) {
+                                        seat.dataset.pairedWith = seat2Name;
+                                    } else {
+                                        seat.dataset.pairedWith = seat1Name;
+                                    }
+                                }
+                            } else if (seatData === seatName) {
+                                // Ghế đơn
+                                seat.classList.add("selected");
+                                shouldSelect = true;
+                            }
+                        }
+                    }
+
+                    seat.addEventListener("click", handleEditSeatClick);
+                    rowDiv.appendChild(seat);
+                }
+
+                const labelRight = document.createElement("div");
+                labelRight.classList.add("row-label");
+                labelRight.textContent = rowLabel;
+                rowDiv.appendChild(labelRight);
+
+                seatMatrix.appendChild(rowDiv);
+
+                // Add seat type config row
+                seatTypeRows.innerHTML += `
+                    <tr>
+                        <td>${rowLabel}</td>
+                        <td>
+                            <select name="SeatTypeRows[${r}].LoaiGhe" class="form-select form-select-sm">
+                                <option value="Thường">Thường</option>
+                                <option value="VIP">VIP</option>
+                                <option value="Đôi">Đôi</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="hidden" name="SeatTypeRows[${r}].MaGhe" value="${rowLabel}" />
+                            <input type="number" name="SeatTypeRows[${r}].Gia" class="form-control form-control-sm" value="0" />
+                        </td>
+                    </tr>`;
+            }
+
+            updateEditLayoutJson();
+            document.getElementById("editSeatTypeConfig").style.display = "block";
+        }
+
+        function handleEditSeatClick() {
+            const seat = this;
+            const editPairMode = document.getElementById('editPairModeToggle').checked;
+
+            if (editPairMode) {
+                if (!firstSeatForPair) {
+                    seat.classList.add("selected");
+                    firstSeatForPair = seat;
+                } else {
+                    const s1 = firstSeatForPair;
+                    const s2 = seat;
+
+                    const row1 = s1.dataset.name.match(/^[A-Z]+/)[0];
+                    const row2 = s2.dataset.name.match(/^[A-Z]+/)[0];
+                    const col1 = parseInt(s1.dataset.col); // ✅ Dùng vị trí cột thực tế
+                    const col2 = parseInt(s2.dataset.col);
+
+                    if (row1 === row2 && Math.abs(col1 - col2) === 1) {
+                        s1.classList.add("selected", "paired");
+                        s2.classList.add("selected", "paired");
+
+                        s1.dataset.pairedWith = s2.dataset.name;
+                        s2.dataset.pairedWith = s1.dataset.name;
+                    } else {
+                        alert("Ghế đôi phải cùng hàng và kề nhau!");
+                        s1.classList.remove("selected");
+                    }
+
+                    firstSeatForPair = null;
+                    updateEditLayoutJson();
+                }
+            } else {
+                if (seat.classList.contains("paired")) {
+                    const pairedSeatName = seat.dataset.pairedWith;
+                    const pairedSeat = document.querySelector(`#editSeatMatrix .seat[data-name="${pairedSeatName}"]`);
+
+                    seat.classList.remove("selected", "paired");
+                    if (pairedSeat) {
+                        pairedSeat.classList.remove("selected", "paired");
+                        delete pairedSeat.dataset.pairedWith;
+                    }
+                    delete seat.dataset.pairedWith;
+                } else {
+                    seat.classList.toggle("selected");
+                }
+
+                firstSeatForPair = null;
+                updateEditLayoutJson();
+            }
+        }
+
+        function updateEditLayoutJson() {
+            const seatRows = document.querySelectorAll("#editSeatMatrix .seat-row");
+            const layout = [];
+
+            seatRows.forEach(row => {
+                const rowData = [];
+                const seats = row.querySelectorAll(".seat");
+                const used = new Set();
+
+                // ✅ Tạo mảng mapping theo vị trí cột thực tế
+                const seatsByCol = [];
+                seats.forEach(seat => {
+                    const col = parseInt(seat.dataset.col);
+                    seatsByCol[col] = seat;
+                });
+
+                seatsByCol.forEach((seat, colIndex) => {
+                    if (!seat || used.has(colIndex)) {
+                        if (!seat) rowData.push(null);
+                        return;
+                    }
+
+                    if (seat.classList.contains("paired")) {
+                        const pairedWith = seat.dataset.pairedWith;
+                        const pairedSeat = Array.from(seats).find(s => s.dataset.name === pairedWith);
+                        
+                        if (pairedSeat) {
+                            const pairedCol = parseInt(pairedSeat.dataset.col);
+                            // Đảm bảo thứ tự ghế đôi đúng
+                            if (colIndex < pairedCol) {
+                                rowData.push(`${seat.dataset.name}+${pairedWith}`);
+                                used.add(colIndex);
+                                used.add(pairedCol);
+                            } else if (!used.has(colIndex)) {
+                                rowData.push(`${pairedWith}+${seat.dataset.name}`);
+                                used.add(colIndex);
+                                used.add(pairedCol);
+                            }
+                        }
+                    } else if (seat.classList.contains("selected")) {
+                        rowData.push(seat.dataset.name);
+                        used.add(colIndex);
+                    } else {
+                        rowData.push(null);
+                        used.add(colIndex);
+                    }
+                });
+
+                layout.push(rowData);
+            });
+
+            document.getElementById("EditLayoutJson").value = JSON.stringify(layout);
+        }
+
+        // ✅ Event listener cho thay đổi thứ tự ghế
+        document.getElementById("editSeatOrderToggle")?.addEventListener("change", function () {
+            const rows = parseInt(document.getElementById('editRows').value);
+            const cols = parseInt(document.getElementById('editCols').value);
+            
+            if (rows > 0 && cols > 0) {
+                // Recreate matrix với thứ tự mới
+                createEditMatrix(rows, cols);
+            }
+        });
+
+        // Event listeners for edit mode
+        document.getElementById("regenerateMatrix")?.addEventListener("click", function () {
+            const rows = parseInt(document.getElementById("editRows").value);
+            const cols = parseInt(document.getElementById("editCols").value);
+            if (rows > 0 && cols > 0) {
+                createEditMatrix(rows, cols);
+            } else {
+                alert("Vui lòng nhập số hàng và cột hợp lệ!");
+            }
+        });
+
+        document.getElementById("editPairModeToggle")?.addEventListener("change", function () {
+            firstSeatForPair = null;
+        });
+
+        // Original functions for create mode (chỉ chạy khi không có existing layout)
+        @if (!hasExistingLayout)
+        {
+            <text>
+            document.getElementById("pairModeToggle").addEventListener("change", function () {
+                pairMode = this.checked;
+                firstSeatForPair = null;
+            });
+
+            function createMatrix(rows, cols) {
+                const seatMatrix = document.getElementById("seatMatrix");
+                const seatTypeRows = document.getElementById("seatTypeRows");
+                seatMatrix.innerHTML = "";
+                seatTypeRows.innerHTML = "";
+
+                for (let r = rows - 1; r >= 0; r--) {
+                    const rowDiv = document.createElement("div");
+                    rowDiv.classList.add("seat-row");
+
+                    const rowLabel = String.fromCharCode(65 + r);
+                    const labelLeft = document.createElement("div");
+                    labelLeft.classList.add("row-label");
+                    labelLeft.textContent = rowLabel;
+                    rowDiv.appendChild(labelLeft);
+
+                    for (let c = 0; c < cols; c++) {
+                        const seat = document.createElement("div");
+                        seat.classList.add("seat");
+
+                        const seatName = `${rowLabel}${c + 1}`;
+                        seat.textContent = c + 1;
+                        seat.dataset.name = seatName;
+                        seat.title = seatName;
+
+                        seat.addEventListener("click", () => {
+                            if (pairMode) {
+                                if (!firstSeatForPair) {
+                                    seat.classList.add("selected");
+                                    firstSeatForPair = seat;
+                                } else {
+                                    const s1 = firstSeatForPair;
+                                    const s2 = seat;
+
+                                    const row1 = s1.dataset.name.match(/^[A-Z]+/)[0];
+                                    const row2 = s2.dataset.name.match(/^[A-Z]+/)[0];
+                                    const col1 = parseInt(s1.dataset.name.match(/[0-9]+$/)[0]);
+                                    const col2 = parseInt(s2.dataset.name.match(/[0-9]+$/)[0]);
+
+                                    if (row1 === row2 && Math.abs(col1 - col2) === 1) {
+                                        s1.classList.add("selected", "paired");
+                                        s2.classList.add("selected", "paired");
+
+                                        s1.dataset.pairedWith = s2.dataset.name;
+                                        s2.dataset.pairedWith = s1.dataset.name;
+                                    } else {
+                                        alert("Ghế đôi phải cùng hàng và kề nhau!");
+                                        s1.classList.remove("selected");
+                                    }
+
+                                    firstSeatForPair = null;
+                                    updateLayoutJson();
+                                }
+                            } else {
+                                if (seat.classList.contains("paired")) {
+                                    const pairedSeatName = seat.dataset.pairedWith;
+                                    const pairedSeat = document.querySelector(`.seat[data-name="${pairedSeatName}"]`);
+
+                                    seat.classList.remove("selected", "paired");
+                                    pairedSeat.classList.remove("selected", "paired");
+
+                                    delete seat.dataset.pairedWith;
+                                    delete pairedSeat.dataset.pairedWith;
+                                } else {
+                                    seat.classList.toggle("selected");
+                                }
+
+                                firstSeatForPair = null;
+                                updateLayoutJson();
+                            }
+                        });
+
+                        rowDiv.appendChild(seat);
+                    }
+
+                    const labelRight = document.createElement("div");
+                    labelRight.classList.add("row-label");
+                    labelRight.textContent = rowLabel;
+                    rowDiv.appendChild(labelRight);
+
+                    seatMatrix.appendChild(rowDiv);
+
+                    seatTypeRows.innerHTML += `
+                        <tr>
+                            <td>${rowLabel}</td>
+                            <td>
+                                <select name="SeatTypeRows[${r}].LoaiGhe" class="form-select form-select-sm">
+                                    <option value="Thường">Thường</option>
+                                    <option value="VIP">VIP</option>
+                                    <option value="Đôi">Đôi</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="hidden" name="SeatTypeRows[${r}].MaGhe" value="${rowLabel}" />
+                                <input type="number" name="SeatTypeRows[${r}].Gia" class="form-control form-control-sm" value="0" />
+                            </td>
+                        </tr>`;
+                }
+
+                updateLayoutJson();
+                document.getElementById("seatTypeConfig").style.display = "block";
+            }
+
+            function updateLayoutJson() {
+                const seatRows = document.querySelectorAll("#seatMatrix .seat-row");
+                const layout = [];
+
+                seatRows.forEach(row => {
+                    const rowData = [];
+                    const seats = row.querySelectorAll(".seat");
+                    const used = new Set();
+
+                    seats.forEach((seat, i) => {
+                        if (used.has(i)) return;
+
+                        if (seat.classList.contains("paired")) {
+                            const pairedWith = seat.dataset.pairedWith;
+                            const nextSeat = seats[i + 1];
+                            if (nextSeat && nextSeat.dataset.name === pairedWith) {
+                                rowData.push(`${seat.dataset.name}+${pairedWith}`);
+                                used.add(i);
+                                used.add(i + 1);
+                            }
+                        } else if (seat.classList.contains("selected")) {
+                            rowData.push(seat.dataset.name);
+                            used.add(i);
+                        } else {
+                            rowData.push(null);
+                        }
+                    });
+
+                    layout.push(rowData);
+                });
+
+                document.getElementById("LayoutJson").value = JSON.stringify(layout);
+            }
+
+            document.getElementById("generateMatrix").addEventListener("click", function () {
+                const rows = parseInt(document.getElementById("rows").value);
+                const cols = parseInt(document.getElementById("cols").value);
+                if (rows > 0 && cols > 0) {
+                    createMatrix(rows, cols);
+                } else {
+                    alert("Vui lòng nhập số hàng và cột hợp lệ!");
+                }
+            });
+            </text>
+        }
+    </script>
+}

@@ -1,0 +1,182 @@
+﻿@using System.Text.Json
+@model HubCinemaAdmin.Models.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3 fw-bold text-primary fs-5">Tổng quan hệ thống</h2>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 text-white bg-primary">
+                <div class="card-body">
+                    Vé bán hôm nay: <strong>@Model.Summary.TicketsToday</strong>
+                </div>
+                <div class="card-footer small d-flex justify-content-between align-items-center">
+                    <span>Hôm nay</span>
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 text-white bg-warning">
+                <div class="card-body">
+                    Vé tháng này: <strong>@Model.Summary.TicketsThisMonth</strong>
+                </div>
+                <div class="card-footer small d-flex justify-content-between align-items-center">
+                    <span>Trong tháng</span>
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 text-white bg-success">
+                <div class="card-body">
+                    Phim đang chiếu: <strong>@Model.Summary.CurrentMovies</strong>
+                </div>
+                <div class="card-footer small d-flex justify-content-between align-items-center">
+                    <span>Hiện tại</span>
+                    <i class="fas fa-film"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 text-white bg-danger">
+                <div class="card-body">
+                    Tổng người dùng: <strong>@Model.Summary.TotalUsers</strong>
+                </div>
+                <div class="card-footer small d-flex justify-content-between align-items-center">
+                    <span>Người dùng</span>
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 text-white bg-info">
+                <div class="card-body">
+                    Vé năm nay: <strong>@Model.Summary.TicketsThisYear</strong>
+                </div>
+                <div class="card-footer small d-flex justify-content-between align-items-center">
+                    <span>Năm hiện tại</span>
+                    <i class="fas fa-chart-line"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 text-white bg-secondary">
+                <div class="card-body">
+                    Phim sắp chiếu: <strong>@Model.Summary.UpcomingMovies</strong>
+                </div>
+                <div class="card-footer small d-flex justify-content-between align-items-center">
+                    <span>Sắp chiếu</span>
+                    <i class="fas fa-hourglass-half"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="card shadow-sm border-0 text-white bg-dark">
+                <div class="card-body">
+                    Rạp hoạt động: <strong>@Model.Summary.ActiveCinemas</strong>
+                </div>
+                <div class="card-footer small d-flex justify-content-between align-items-center">
+                    <span>Toàn hệ thống</span>
+                    <i class="fas fa-building"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Biểu đồ -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <i class="fas fa-chart-area me-1"></i> Vé bán theo ngày
+                </div>
+                <div class="card-body">
+                    <canvas id="myAreaChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <i class="fas fa-chart-bar me-1"></i> Vé theo rạp
+                </div>
+                <div class="card-body">
+                    <canvas id="myBarChart" width="100%" height="40"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const dailyLabels = @Html.Raw(Json.Serialize(Model.DailySales.Select(d => d.Label)));
+        const dailyValues = @Html.Raw(Json.Serialize(Model.DailySales.Select(d => d.Value)));
+
+        new Chart(document.getElementById('myAreaChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: dailyLabels,
+                datasets: [{
+                    label: 'Vé đã bán mỗi ngày',
+                    data: dailyValues,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: 'white',
+                    pointBorderColor: 'rgba(54, 162, 235, 1)',
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
+        });
+
+        const cinemaLabels = @Html.Raw(Json.Serialize(Model.CinemaSales.Select(c => c.Label)));
+        const cinemaValues = @Html.Raw(Json.Serialize(Model.CinemaSales.Select(c => c.Value)));
+
+        new Chart(document.getElementById('myBarChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: cinemaLabels,
+                datasets: [{
+                    label: 'Vé bán theo rạp',
+                    data: cinemaValues,
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                },
+                plugins: {
+                    legend: { position: 'top' }
+                }
+            }
+        });
+    </script>
+}

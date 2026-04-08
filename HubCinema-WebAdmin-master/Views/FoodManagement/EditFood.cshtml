@@ -1,0 +1,101 @@
+﻿@model HubCinemaAdmin.Models.FoodDTO
+
+@{
+    ViewData["Title"] = "Chỉnh sửa món ăn";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var cinemas = ViewBag.Cinemas as List<HubCinemaAdmin.Models.CinemaDTO>;
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-pencil-fill me-2"></i>@ViewData["Title"]
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="EditFood" method="post" enctype="multipart/form-data">
+                        @Html.HiddenFor(model => model.IDFood)
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FoodName" class="form-label">Tên món ăn <span class="text-danger">*</span></label>
+                                <input asp-for="FoodName" class="form-control" placeholder="Nhập tên món ăn" />
+                                <span asp-validation-for="FoodName" class="text-danger"></span>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Price" class="form-label">Giá (VNĐ) <span class="text-danger">*</span></label>
+                                <input asp-for="Price" type="number" class="form-control" placeholder="Nhập giá món ăn" min="0" />
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label">Mô tả</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Nhập mô tả món ăn"></textarea>
+                            <span asp-validation-for="Description" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageURL" class="form-label">URL hình ảnh</label>
+                            <input asp-for="ImageURL" class="form-control" placeholder="Nhập URL hình ảnh" />
+                            <span asp-validation-for="ImageURL" class="text-danger"></span>
+                            
+                            @if (!string.IsNullOrEmpty(Model?.ImageURL))
+                            {
+                                <div class="mt-2">
+                                    <img src="@Model.ImageURL" alt="@Model.FoodName" class="img-thumbnail" style="max-width: 200px; max-height: 150px;" />
+                                </div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="ApplyToAllCinemas" class="form-check-input" type="checkbox" />
+                                <label asp-for="ApplyToAllCinemas" class="form-check-label">
+                                    Áp dụng cho tất cả các rạp
+                                </label>
+                            </div>
+                        </div>
+
+                        @if (cinemas != null && cinemas.Any())
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Chọn rạp áp dụng:</label>
+                                <div class="row">
+                                    @for (int i = 0; i < cinemas.Count; i++)
+                                    {
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input type="checkbox" 
+                                                       name="SelectedCinemaIds" 
+                                                       value="@cinemas[i].IDCinema" 
+                                                       class="form-check-input" 
+                                                       id="cinema_@cinemas[i].IDCinema" />
+                                                <label class="form-check-label" for="cinema_@cinemas[i].IDCinema">
+                                                    @cinemas[i].CinemaName
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="LoadListCombo" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle me-1"></i>Cập nhật món ăn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

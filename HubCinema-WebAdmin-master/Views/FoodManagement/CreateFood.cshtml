@@ -1,0 +1,106 @@
+﻿@model HubCinemaAdmin.Models.FoodDTO
+
+@{
+    ViewData["Title"] = "Tạo món ăn";
+    var cinemas = ViewBag.Cinemas as List<HubCinemaAdmin.Models.CinemaDTO>;
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+@foreach (var key in new[] { "Success", "Error", "Warning" })
+{
+    if (TempData[key] != null)
+    {
+        var alertClass = key == "Success" ? "success" :
+                         key == "Error" ? "danger" : "warning";
+        <div class="alert alert-@alertClass alert-dismissible fade show" role="alert">
+            @TempData[key]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+}
+
+<form asp-action="CreateFood" method="post" asp-antiforgery="true">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="mb-3">
+        <label asp-for="FoodName" class="form-label fw-bold"></label>
+        <input asp-for="FoodName" class="form-control" placeholder="Nhập tên món ăn" />
+        <span asp-validation-for="FoodName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label fw-bold"></label>
+        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả món ăn"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3 row">
+        <div class="col-md-6">
+            <label asp-for="Price" class="form-label fw-bold"></label>
+            <input asp-for="Price" type="number" step="0.01" class="form-control" placeholder="Giá (VNĐ)" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label asp-for="ImageURL" class="form-label fw-bold"></label>
+            <input asp-for="ImageURL" class="form-control" placeholder="URL ảnh món ăn" />
+            <span asp-validation-for="ImageURL" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-check form-switch mb-4">
+        <input asp-for="ApplyToAllCinemas" class="form-check-input" type="checkbox" id="applyAll" />
+        <label class="form-check-label fw-semibold" for="applyAll">
+            Áp dụng cho tất cả các rạp
+        </label>
+    </div>
+
+    <div id="cinemaList" class="mb-4">
+        <label class="form-label fw-bold mb-2">Chọn các rạp áp dụng:</label>
+        @if (cinemas != null && cinemas.Any())
+        {
+            <div class="row">
+                @foreach (var cinema in cinemas)
+                {
+                    <div class="col-md-4">
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="SelectedCinemaIds"
+                                   value="@cinema.IDCinema"
+                                   id="cinema_@cinema.IDCinema" />
+                            <label class="form-check-label" for="cinema_@cinema.IDCinema">
+                                @cinema.CinemaName (@cinema.City)
+                            </label>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-danger">Không thể tải danh sách rạp.</div>
+        }
+    </div>
+
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle me-1"></i> Tạo món ăn
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById("applyAll").addEventListener("change", function () {
+            document.getElementById("cinemaList").style.display = this.checked ? "none" : "block";
+        });
+
+        window.addEventListener("DOMContentLoaded", function () {
+            const cb = document.getElementById("applyAll");
+            document.getElementById("cinemaList").style.display = cb.checked ? "none" : "block";
+        });
+    </script>
+}

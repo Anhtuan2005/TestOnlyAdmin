@@ -1,0 +1,154 @@
+﻿@model CinemaDTO
+
+@{
+    ViewData["Title"] = "Chỉnh sửa rạp chiếu";
+    var rooms = ViewBag.Rooms as List<RoomDTO> ?? new List<RoomDTO>();
+}
+
+<div class="container">
+    <h2 class="text-primary mb-4"><i class="bi bi-pencil-square"></i> Chỉnh sửa rạp chiếu</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <form asp-action="EditCinema" method="post" class="mb-5">
+        <input type="hidden" asp-for="IDCinema" />
+
+        <div class="mb-3">
+            <label asp-for="CinemaName" class="form-label">Tên rạp</label>
+            <input asp-for="CinemaName" class="form-control" />
+            <span asp-validation-for="CinemaName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Address" class="form-label">Địa chỉ</label>
+            <input asp-for="Address" class="form-control" />
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="City" class="form-label">Thành phố</label>
+            <input asp-for="City" class="form-control" />
+            <span asp-validation-for="City" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save me-1"></i> Lưu thay đổi
+        </button>
+        <button type="button" id="btnDeleteCinema" class="btn btn-danger ms-2">
+            <i class="bi bi-trash me-1"></i> Xóa rạp
+        </button>
+        <a asp-action="LoadListCinema" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+    </form>
+
+    <hr class="my-4" />
+
+    <h3 class="fw-semibold mb-3 text-primary">
+        <i class="bi bi-door-open-fill me-1"></i> Danh sách phòng chiếu
+        <a asp-controller="RoomManagement"
+           asp-action="CreateRoom"
+           asp-route-idCinema="@Model.IDCinema"
+           class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i> Thêm phòng chiếu
+        </a>
+    </h3>
+
+    @if (rooms.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light text-center">
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Tên phòng</th>
+                        <th>Loại</th>
+                        <th>Trạng thái</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var room in rooms)
+                    {
+                        var typeName = room.RoomType switch
+                        {
+                            1 => "2D",
+                            2 => "3D",
+                            3 => "4D",
+                            _ => "Khác"
+                        };
+
+                        <tr>
+                            <td class="text-center" style="width: 120px;">
+                                <img src="@(!string.IsNullOrEmpty(room.RoomImageURL) ? room.RoomImageURL : "/images/no-image.png")"
+                                     class="img-fluid rounded"
+                                     style="max-height: 60px;"
+                                     alt="Ảnh phòng @room.RoomName"
+                                     title="@room.RoomName" />
+                            </td>
+                            <td class="fw-medium">@room.RoomName</td>
+                            <td class="text-center">
+                                <span class="badge rounded-pill text-bg-warning">@typeName</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge @(room.Status ? "bg-success" : "bg-secondary")">
+                                    @(room.Status ? "Hoạt động" : "Ngừng hoạt động")
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a asp-controller="SeatLayout"
+                                   asp-action="Create"
+                                   asp-route-idRoom="@room.IDRoom"
+                                   asp-route-maRap="@Model.IDCinema"
+                                   asp-route-idLayout="@room.id_layout"
+                                   class="btn btn-sm btn-info text-white"
+                                   title="Xem chi tiết">
+                                    <i class="bi bi-eye-fill me-1"></i>Ghế
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted fst-italic">Không có phòng chiếu nào thuộc rạp này.</p>
+    }
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+               document.getElementById("btnDeleteCinema").addEventListener("click", async function () {
+            if (!confirm("Bạn có chắc chắn muốn xóa rạp này không?")) return;
+
+            const cinemaId = parseInt("@Model.IDCinema");
+
+            try {
+                const response = await fetch(`/CinemaManagement/DeleteCinema/${cinemaId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert("Xóa rạp chiếu thành công!");
+                    window.location.href = "/CinemaManagement/LoadListCinema";
+                } else {
+                    const errorText = await response.text();
+                    alert("Xóa thất bại: " + errorText);
+                }
+            } catch (err) {
+                alert("Lỗi khi gọi API: " + err);
+            }
+        });
+
+    </script>
+}

@@ -1,0 +1,41 @@
+﻿@model SeatTypeInRoomAdminViewModel
+
+@{
+    ViewData["Title"] = "Sửa loại ghế trong phòng";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3">Sửa loại ghế</h2>
+
+    <form asp-action="Edit" method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label class="form-label">Rạp</label>
+            <select asp-for="CinemaId" asp-items="ViewBag.Cinemas" class="form-select"></select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Phòng</label>
+            <select asp-for="RoomId" asp-items="ViewBag.Rooms" class="form-select"></select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Hàng ghế</label>
+            <input asp-for="RowCode" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Loại ghế</label>
+            <input asp-for="SeatType" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Giá (VND)</label>
+            <input asp-for="Price" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        <a asp-action="Index" class="btn btn-secondary">Huỷ</a>
+    </form>
+</div>

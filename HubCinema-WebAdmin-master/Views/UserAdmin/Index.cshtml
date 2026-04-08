@@ -1,0 +1,68 @@
+﻿@model List<HubCinemaAdmin.Models.UserDto>
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">📋 Quản lý người dùng</h2>
+    </div>
+
+    <form method="get" class="row g-2 mb-4">
+        <div class="col-md-10">
+            <input type="text" name="keyword" class="form-control" placeholder="🔍 Tìm theo email hoặc SĐT"
+                   value="@Context.Request.Query["keyword"]" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
+        </div>
+    </form>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+    }
+
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle shadow-sm">
+            <thead class="table-primary text-center">
+                <tr>
+                    <th>ID</th>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>SĐT</th>
+                    <th>Ngày tạo</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Không có người dùng nào được tìm thấy.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td class="text-center">@user.Id</td>
+                            <td>@user.FullName</td>
+                            <td>@user.Email</td>
+                            <td>@user.Phone</td>
+                            <td class="text-center">
+                                @user.CreateAt?.ToString("dd/MM/yyyy HH:mm")
+                            </td>
+                            <td class="text-center">
+                                <a href="@Url.Action("Invoices", "UserAdmin", new { id = user.Id })" class="btn btn-sm btn-outline-info">
+                                    <i class="fa fa-file-invoice"></i> Xem hóa đơn
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

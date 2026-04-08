@@ -1,0 +1,27 @@
+﻿@model SeatTypeInRoomAdminViewModel
+
+<h2 class="mb-3 text-danger">Bạn có chắc muốn xoá?</h2>
+
+<dl class="row">
+    <dt class="col-sm-3">Rạp</dt>
+    <dd class="col-sm-9">@Model.CinemaName</dd>
+
+    <dt class="col-sm-3">Phòng</dt>
+    <dd class="col-sm-9">@Model.RoomName</dd>
+
+    <dt class="col-sm-3">Hàng ghế</dt>
+    <dd class="col-sm-9">@Model.RowCode</dd>
+
+    <dt class="col-sm-3">Loại ghế</dt>
+    <dd class="col-sm-9">@Model.SeatType</dd>
+
+    <dt class="col-sm-3">Giá</dt>
+    <dd class="col-sm-9">@Model.Price.ToString("N0") ₫</dd>
+</dl>
+
+<form asp-action="Delete" method="post">
+
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Xoá</button>
+    <a asp-action="Index" class="btn btn-secondary">Huỷ</a>
+</form>

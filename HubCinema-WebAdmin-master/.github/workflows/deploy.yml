@@ -1,0 +1,59 @@
+name: Build and Deploy ASP.NET Core to Windows Server
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build HubCinemaAdmin.csproj --configuration Release --no-restore
+
+    - name: Publish
+      run: dotnet publish HubCinemaAdmin.csproj -c Release -o publish --no-build
+
+    - name: Stop IIS before deploy
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        script: iisreset /stop
+
+    - name: Deploy to Windows Server via SCP
+      uses: appleboy/scp-action@v0.1.4
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        source: "publish/"
+        target: "C:/Deploy/HubCinemaAdmin"
+        strip_components: 1
+
+    - name: Start IIS after deploy
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        port: 22
+        script: iisreset /start

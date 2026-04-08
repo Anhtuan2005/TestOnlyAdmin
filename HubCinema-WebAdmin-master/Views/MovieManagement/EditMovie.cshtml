@@ -1,0 +1,98 @@
+﻿@model HubCinemaAdmin.Models.MovieDTO
+
+@{
+    ViewData["Title"] = "EditMovie";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Chỉnh sửa phim</h3>
+        </div>
+        <div class="card-body">
+            <form asp-action="EditMovie">
+                <input type="hidden" asp-for="IDMovie" />
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="MovieName" class="form-label"></label>
+                    <input asp-for="MovieName" class="form-control" />
+                    <span asp-validation-for="MovieName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Genre" class="form-label"></label>
+                    <input asp-for="Genre" class="form-control" />
+                    <span asp-validation-for="Genre" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Duration" class="form-label"></label>
+                    <input asp-for="Duration" class="form-control" />
+                    <span asp-validation-for="Duration" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Director" class="form-label"></label>
+                    <input asp-for="Director" class="form-control" />
+                    <span asp-validation-for="Director" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="ReleaseDate" class="form-label"></label>
+                    <input asp-for="ReleaseDate" type="date" class="form-control" />
+                    <span asp-validation-for="ReleaseDate" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="CoverURL" class="form-label"></label>
+                    <input asp-for="CoverURL" class="form-control" />
+                    <span asp-validation-for="CoverURL" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="TrailerURL" class="form-label"></label>
+                    <input asp-for="TrailerURL" class="form-control" />
+                    <span asp-validation-for="TrailerURL" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="AgeRestriction" class="form-label"></label>
+                    <input asp-for="AgeRestriction" class="form-control" />
+                    <span asp-validation-for="AgeRestriction" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Producer" class="form-label"></label>
+                    <input asp-for="Producer" class="form-control" />
+                    <span asp-validation-for="Producer" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label asp-for="Actors" class="form-label"></label>
+                    <input asp-for="Actors" class="form-control" />
+                    <span asp-validation-for="Actors" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="LoadListMovie" class="btn btn-secondary">← Quay lại danh sách</a>
+                    <button type="submit" class="btn btn-success">💾 Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

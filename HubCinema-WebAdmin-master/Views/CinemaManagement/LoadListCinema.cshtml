@@ -1,0 +1,46 @@
+﻿@model IEnumerable<HubCinemaAdmin.Models.CinemaDTO>
+
+@{
+    ViewData["Title"] = "Danh sách rạp chiếu";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    tr.clickable-row {
+        cursor: pointer;
+        transition: background-color 0.1s ease-in-out;
+    }
+
+        tr.clickable-row:hover {
+            background-color: #f1f1f1;
+        }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="text-primary">@ViewData["Title"]</h2>
+        <a asp-action="CreateCinema" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Tạo rạp mới
+        </a>
+    </div>
+
+    <table class="table table-hover rounded">
+        <thead class="table-light">
+            <tr>
+                <th>@Html.DisplayNameFor(model => model.First().CinemaName)</th>
+                <th>@Html.DisplayNameFor(model => model.First().Address)</th>
+                <th>@Html.DisplayNameFor(model => model.First().City)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr class="clickable-row" onclick="window.location='@Url.Action("EditCinema", "CinemaManagement", new { idCinema = item.IDCinema })'">
+                    <td><span class="text-main">@item.CinemaName</span></td>
+                    <td>@item.Address</td>
+                    <td>@item.City</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

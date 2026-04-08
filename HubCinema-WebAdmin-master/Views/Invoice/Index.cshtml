@@ -1,0 +1,96 @@
+﻿@model List<InvoiceAdminViewModel>
+
+<div class="container" style="max-width: 1200px;">
+    <!-- CHỈNH CHIỀU RỘNG TOÀN BỘ -->
+    <h2 class="mb-4 fw-bold text-primary fs-5">Danh sách hóa đơn</h2>
+
+    <!-- FORM GỌN, CÁCH NHẸ -->
+    <form method="get" class="row gx-3 gy-2 align-items-end mb-4">
+        <div class="col-6 col-md-3">
+            <label class="form-label mb-1 small">Từ ngày</label>
+            <input type="date" name="startDate" class="form-control form-control-sm" style="height: 30px;" value="@ViewBag.StartDate" />
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label mb-1 small">Đến ngày</label>
+            <input type="date" name="endDate" class="form-control form-control-sm" style="height: 30px;" value="@ViewBag.EndDate" />
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label invisible">Lọc</label>
+            <button type="submit" class="btn btn-sm btn-primary w-100" style="height: 30px;">Lọc</button>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label invisible">Xuất</label>
+            <a asp-action="ExportToExcel"
+               asp-route-startDate="@ViewBag.StartDate"
+               asp-route-endDate="@ViewBag.EndDate"
+               class="btn btn-sm btn-success w-100"
+               style="height: 30px;">
+                Xuất Excel
+            </a>
+        </div>
+    </form>
+
+    <!-- BẢNG GỌN, KHÔNG GÂY TRÀN -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover table-sm text-center align-middle">
+            <thead class="table-dark text-uppercase small">
+                <tr>
+                    <th style="white-space: nowrap;">#</th>
+                    <th style="white-space: nowrap;">Ngày tạo</th>
+                    <th style="white-space: nowrap;">Phim</th>
+                    <th style="white-space: nowrap;">Suất chiếu</th>
+                    <th style="white-space: nowrap;">Phòng</th>
+                    <th style="white-space: nowrap;">Ghế</th>
+                    <th style="white-space: nowrap;">Combo</th>
+                    <th style="white-space: nowrap;">Tổng tiền</th>
+                </tr>
+            </thead>
+            <tbody class="small">
+                @foreach (var invoice in Model)
+                {
+                    <tr>
+                        <td>@invoice.IdInvoice</td>
+                        <td>@invoice.CreateAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="fw-semibold">@invoice.MovieName</td>
+                        <td>
+                            @invoice.NgayChieu.ToString("dd/MM")<br />
+                            <span class="badge bg-info text-dark mt-1" style="font-size: 0.75rem;">
+                                @invoice.GioChieu
+                            </span>
+                        </td>
+                        <td><span class="text-primary">@invoice.Room</span></td>
+                        <td>
+                            @if (invoice.Seats?.Any() == true)
+                            {
+                                @Html.Raw(string.Join(" ", invoice.Seats.Select(seat =>
+                                         $"<span class='badge bg-secondary me-1 mb-1' style='font-size: 0.75rem'>{seat}</span>")))
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic">Không có</span>
+                            }
+                        </td>
+                        <td>
+                            @if (invoice.Foods?.Any() == true)
+                            {
+                                foreach (var item in invoice.Foods)
+                                {
+                                    <div class="mb-1">
+                                        <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">
+                                            @item.FoodName × @item.Quantity
+                                        </span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted fst-italic">Không có</span>
+                            }
+                        </td>
+                        <td class="fw-bold text-danger">@invoice.TotalPrice.ToString("N0") đ</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "Danh sách món ăn theo rạp";
+    var cinemas = ViewBag.Cinemas as List<HubCinemaAdmin.Models.CinemaDTO>;
+}
+
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h2 class="fw-bold">@ViewData["Title"]</h2>
+            <label for="cinemaDropdown" class="form-label mt-3">Chọn rạp:</label>
+            <select id="cinemaDropdown" class="form-select shadow-sm border-primary">
+                <option value="">-- Tất cả combo --</option>
+                @foreach (var c in cinemas)
+                {
+                    <option value="@c.IDCinema">@c.CinemaName</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    <div id="foodContainer" class="row">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                Đang tải danh sách món ăn...
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const dropdown = document.getElementById("cinemaDropdown");
+            const container = document.getElementById("foodContainer");
+
+            (async function loadDefaultCombos() {
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-primary">Đang tải danh sách món ăn...</p>
+                    </div>`;
+                try {
+                    const response = await fetch(`/FoodManagement/GetAllCombos`);
+                    if (!response.ok) throw new Error("Lỗi tải dữ liệu mặc định");
+
+                    const html = await response.text();
+                    container.innerHTML = html;
+                } catch (error) {
+                    container.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-danger" role="alert">
+                                Không thể tải dữ liệu mặc định. Vui lòng thử lại sau.
+                            </div>
+                        </div>`;
+                    console.error("Fetch error:", error);
+                }
+            })();
+
+            dropdown.addEventListener("change", async function () {
+                const cinemaId = this.value;
+
+                container.innerHTML = `
+                    <div class="col-12 text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-primary">Đang tải danh sách món ăn...</p>
+                    </div>`;
+
+                try {
+                    const url = cinemaId
+                        ? `/FoodManagement/GetFoodsByCinema?cinemaId=${cinemaId}`
+                        : `/FoodManagement/GetAllCombos`;
+
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error("Lỗi tải dữ liệu");
+
+                    const html = await response.text();
+                    container.innerHTML = html;
+                } catch (error) {
+                    container.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-danger" role="alert">
+                                Không thể tải dữ liệu. Vui lòng thử lại sau.
+                            </div>
+                        </div>`;
+                    console.error("Fetch error:", error);
+                }
+            });
+        });
+    </script>
+}

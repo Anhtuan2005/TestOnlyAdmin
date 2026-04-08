@@ -1,0 +1,465 @@
+﻿@model HubCinemaAdmin.Models.ShowtimeDTO
+@{
+    ViewData["Title"] = "Lịch chiếu theo rạp";
+    var cinemas = ViewBag.Cinemas as List<HubCinemaAdmin.Models.CinemaDTO>;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-3 fw-bold text-primary fs-5">Lịch chiếu theo rạp</h2>
+
+    <form class="row g-3 align-items-end mb-4">
+        <div class="col-md-6 col-lg-4">
+            <label for="cinemaSelect" class="form-label mb-1">Chọn rạp</label>
+            <select id="cinemaSelect" class="form-select form-select-sm">
+                <option value="">-- Chọn rạp --</option>
+                @foreach (var c in cinemas ?? new())
+                {
+                    <option value="@c.IDCinema">@c.CinemaName</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <label for="dateInput" class="form-label mb-1">Chọn ngày</label>
+            <input type="date" id="dateInput" class="form-control form-control-sm" />
+        </div>
+
+        <div class="col-12 col-lg-4 d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-primary mt-4" id="loadTimeline">
+                <i class="fas fa-sync-alt me-1"></i> Tải lịch chiếu
+            </button>
+            <button type="button" class="btn btn-sm btn-success mt-4" data-bs-toggle="modal" data-bs-target="#addShowtimeModal">
+                <i class="fas fa-plus me-1"></i> Thêm lịch chiếu
+            </button>
+        </div>
+    </form>
+
+    <!-- Modal thêm lịch chiếu -->
+    <div class="modal fade" id="addShowtimeModal" tabindex="-1" aria-labelledby="addShowtimeModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="addShowtimeForm" asp-action="CreateSchedule" asp-controller="ShowtimeManagement" method="post">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <!-- Rạp -->
+                        <div class="mb-3">
+                            <label class="form-label">Rạp</label>
+                            <div class="form-control form-control-sm" id="selectedCinemaText" readonly></div>
+                            <input type="hidden" name="MaRap" id="selectedCinemaId" />
+                        </div>
+
+                        <!-- Phòng chiếu -->
+                        <div class="mb-3">
+                            <label class="form-label">Phòng chiếu</label>
+                            <select name="PhongChieu" id="roomSelect" class="form-select form-select-sm" required>
+                                <option value="">-- Chọn phòng chiếu --</option>
+                            </select>
+                        </div>
+
+                        <!-- Ngày chiếu -->
+                        <div class="mb-3">
+                            <label class="form-label">Ngày chiếu</label>
+                            <input type="date" name="NgayChieu" class="form-control form-control-sm" required />
+                        </div>
+
+                        <!-- Phim -->
+                        <div class="mb-3">
+                            <label class="form-label">Phim</label>
+                            <select name="MaPhim" id="movieSelect" class="form-select form-select-sm" required>
+                                <option value="">-- Chọn phim --</option>
+                            </select>
+                        </div>
+
+                        <!-- Thời gian bắt đầu -->
+                        <div class="mb-3">
+                            <label class="form-label">Thời gian bắt đầu</label>
+                            <input type="time" name="GioChieu" class="form-control form-control-sm" required />
+                        </div>
+
+                        <!-- Thời gian kết thúc -->
+                        <div class="mb-3">
+                            <label class="form-label">Thời gian kết thúc</label>
+                            <input type="hidden" name="GioKetThuc" />
+                        </div>
+
+                        <!-- Chi phí -->
+                        <div class="form-group">
+                            <label class="form-label">Chi phí</label>
+                            <input name="ChiPhi" class="form-control form-control-sm" type="number" step="0.01" required />
+                        </div>
+
+                        <!-- Loại suất chiếu -->
+                        <div class="form-group">
+                            <label class="form-label">Loại suất chiếu</label>
+                            <input name="TypeSuatChieu" class="form-control form-control-sm" required />
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-sm btn-success">Lưu</button>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+
+    <div id="timelineWrapper" class="mt-4 position-relative">
+        <div class="g-now-indicator" id="nowIndicator"></div>
+        <!-- timeline sẽ render ở đây -->
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        async function loadTimeline() {
+            const cinemaId = document.getElementById('cinemaSelect').value;
+            const date = document.getElementById('dateInput').value;
+            const wrapper = document.getElementById('timelineWrapper');
+            wrapper.innerHTML = '<div class="g-now-indicator" id="nowIndicator"></div>';
+
+            if (!cinemaId || !date) {
+                alert('Vui lòng chọn rạp và ngày.');
+                return;
+            }
+
+            let res, data;
+            try {
+                res = await fetch(`/ShowtimeManagement/GetTimeline?ngay=${date}&maRap=${cinemaId}`);
+                if (!res.ok) throw new Error('API error ' + res.status);
+                data = await res.json();
+            } catch (err) {
+                wrapper.innerHTML += `<div class="alert alert-danger">Không có lịch chiếu. </div>`;
+                return;
+            }
+
+            if (!Array.isArray(data) || data.length === 0) {
+                wrapper.innerHTML += `<div class="alert alert-warning">Không có lịch chiếu.</div>`;
+                return;
+            }
+
+            renderGantt(wrapper, data, date);
+        }
+
+        function renderGantt(container, data, dateStr) {
+            const items = data.map(x => ({
+                id: x.id,
+                name: x.name,
+                resource: x.resource || 'Không rõ phòng',
+                start: new Date(x.start),
+                end: new Date(x.end)
+            }));
+
+            const dayStart = new Date(dateStr + 'T00:00:00');
+            const dayEnd = new Date(dateStr + 'T23:59:59');
+
+            let minTime = dayEnd, maxTime = dayStart;
+            for (const it of items) {
+                const s = it.start < dayStart ? dayStart : it.start;
+                const e = it.end > dayEnd ? dayEnd : it.end;
+                if (s < minTime) minTime = s;
+                if (e > maxTime) maxTime = e;
+                it._startClamped = s;
+                it._endClamped = e;
+            }
+            if (maxTime - minTime < 60 * 60 * 1000) {
+                minTime = new Date(minTime.getTime() - 30 * 60 * 1000);
+                maxTime = new Date(maxTime.getTime() + 30 * 60 * 1000);
+            }
+
+            const totalMs = maxTime - minTime;
+            const byRoom = {};
+            for (const it of items) {
+                if (!byRoom[it.resource]) byRoom[it.resource] = [];
+                byRoom[it.resource].push(it);
+            }
+
+            const scaleEl = buildTimeScale(minTime, maxTime);
+            const rowsEl = document.createElement('div');
+            rowsEl.className = 'g-rows';
+
+            Object.keys(byRoom).forEach(roomName => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'g-row';
+
+                const labelEl = document.createElement('div');
+                labelEl.className = 'g-row-label';
+                labelEl.textContent = roomName;
+                rowEl.appendChild(labelEl);
+
+                const trackEl = document.createElement('div');
+                trackEl.className = 'g-row-track';
+
+                byRoom[roomName].forEach(it => {
+                    const startPct = ((it._startClamped - minTime) / totalMs) * 100;
+                    const widthPct = ((it._endClamped - it._startClamped) / totalMs) * 100;
+
+                    const barEl = document.createElement('div');
+                    barEl.className = 'g-bar';
+                    barEl.style.left = startPct + '%';
+                    barEl.style.width = widthPct + '%';
+                    barEl.title = `${it.name}\n${fmtTime(it.start)} - ${fmtTime(it.end)}`;
+                    barEl.innerHTML = `
+                        <span class="g-bar-text">${it.name}</span>
+                        <span class="g-bar-time">${fmtTime(it.start)}-${fmtTime(it.end)}</span>
+                    `;
+                    trackEl.appendChild(barEl);
+                });
+
+                rowEl.appendChild(trackEl);
+                rowsEl.appendChild(rowEl);
+            });
+
+            container.appendChild(scaleEl);
+            container.appendChild(rowsEl);
+
+            renderNowIndicator(minTime, maxTime);
+            setInterval(() => renderNowIndicator(minTime, maxTime), 60000);
+        }
+
+        function renderNowIndicator(minTime, maxTime) {
+            const now = new Date();
+            const indicator = document.getElementById('nowIndicator');
+
+            if (now < minTime || now > maxTime) {
+                indicator.style.display = 'none';
+                return;
+            }
+
+            const totalMs = maxTime - minTime;
+            const offsetPct = ((now - minTime) / totalMs) * 100;
+
+            indicator.style.display = 'block';
+            indicator.style.width = offsetPct + '%';
+        }
+
+        function buildTimeScale(minTime, maxTime) {
+            const el = document.createElement('div');
+            el.className = 'g-scale';
+            const startHour = minTime.getHours() + (minTime.getMinutes() > 0 ? 1 : 0);
+            const endHour = maxTime.getHours() + 1;
+            const totalMs = maxTime - minTime;
+
+            const labelSpacer = document.createElement('div');
+            labelSpacer.className = 'g-scale-label-spacer';
+            el.appendChild(labelSpacer);
+
+            const track = document.createElement('div');
+            track.className = 'g-scale-track';
+
+            for (let h = startHour; h <= endHour; h++) {
+                const tickTime = new Date(minTime);
+                tickTime.setHours(h, 0, 0, 0);
+                if (tickTime < minTime) continue;
+                if (tickTime > maxTime) break;
+
+                const pct = ((tickTime - minTime) / totalMs) * 100;
+                const tick = document.createElement('div');
+                tick.className = 'g-scale-tick';
+                tick.style.left = pct + '%';
+                tick.textContent = h.toString().padStart(2, '0') + ':00';
+                track.appendChild(tick);
+            }
+            el.appendChild(track);
+            return el;
+        }
+
+        function fmtTime(dt) {
+            return dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        document.getElementById('loadTimeline').addEventListener('click', loadTimeline);
+
+        document.getElementById('addShowtimeModal').addEventListener('show.bs.modal', async function () {
+            const cinemaSelect = document.getElementById('cinemaSelect');
+            const cinemaId = cinemaSelect.value;
+            
+            const roomSelect = document.getElementById('roomSelect');
+            const movieSelect = document.getElementById('movieSelect');
+
+            // ✅ Kiểm tra và xử lý khi không có cinema được chọn
+            if (!cinemaId) {
+                document.getElementById('selectedCinemaText').textContent = '-- Vui lòng chọn rạp trước --';
+                document.getElementById('selectedCinemaId').value = '';
+                roomSelect.innerHTML = '<option value="">-- Vui lòng chọn rạp trước --</option>';
+                movieSelect.innerHTML = '<option value="">-- Vui lòng chọn rạp trước --</option>';
+                
+                // ✅ Hiển thị thông báo cho user
+                alert('Vui lòng chọn rạp trước khi thêm lịch chiếu!');
+                return;
+            }
+
+            const cinemaName = cinemaSelect.options[cinemaSelect.selectedIndex].text;
+            document.getElementById('selectedCinemaText').textContent = cinemaName;
+            document.getElementById('selectedCinemaId').value = cinemaId;
+
+            // Reset về trạng thái loading
+            roomSelect.innerHTML = '<option value="">-- Đang tải phòng chiếu... --</option>';
+            movieSelect.innerHTML = '<option value="">-- Đang tải phim... --</option>';
+
+            // ✅ Load rooms
+            try {
+                const roomRes = await fetch(`/ShowtimeManagement/GetRoomsByCinema?cinemaId=${cinemaId}`);
+                if (!roomRes.ok) {
+                    throw new Error(`API lỗi với mã trạng thái: ${roomRes.status}`);
+                }
+
+                const rooms = await roomRes.json();
+                
+                if (!Array.isArray(rooms) || rooms.length === 0) {
+                    roomSelect.innerHTML = '<option value="">-- Không có phòng nào --</option>';
+                } else {
+                    roomSelect.innerHTML = '<option value="">-- Chọn phòng chiếu --</option>' + 
+                        rooms.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+                }
+            } catch (err) {
+                console.error('Lỗi khi gọi API phòng chiếu:', err);
+                roomSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu phòng --</option>';
+            }
+
+            // ✅ Load movies
+            try {
+                const movieRes = await fetch(`/ShowtimeManagement/LoadListMovie`);
+                if (!movieRes.ok) {
+                    throw new Error(`API lỗi với mã trạng thái: ${movieRes.status}`);
+                }
+
+                const movies = await movieRes.json();
+                
+                if (!Array.isArray(movies) || movies.length === 0) {
+                    movieSelect.innerHTML = '<option value="">-- Không có phim phù hợp --</option>';
+                } else {
+                    movieSelect.innerHTML = '<option value="">-- Chọn phim --</option>' + 
+                        movies.map(m => `<option value="${m.idMovie}">${m.movieName}</option>`).join('');
+                }
+            } catch (err) {
+                console.error('Lỗi khi gọi API danh sách phim:', err);
+                movieSelect.innerHTML = '<option value="">-- Lỗi tải phim --</option>';
+            }
+        });
+
+        // ✅ Thêm event listener để tự động set lại cinema khi thay đổi
+        document.getElementById('cinemaSelect').addEventListener('change', function() {
+            // Clear modal data khi đổi rạp
+            document.getElementById('selectedCinemaText').textContent = '';
+            document.getElementById('selectedCinemaId').value = '';
+        });
+
+        // ✅ Thêm event để set ngày mặc định trong modal
+        document.getElementById('addShowtimeModal').addEventListener('show.bs.modal', function () {
+            const dateInput = document.getElementById('dateInput');
+            const modalDateInput = document.querySelector('#addShowtimeModal input[name="NgayChieu"]');
+            
+            // Set ngày đã chọn trong filter vào modal
+            if (dateInput.value) {
+                modalDateInput.value = dateInput.value;
+            } else {
+                // Set ngày hôm nay nếu chưa chọn ngày
+                const today = new Date().toISOString().split('T')[0];
+                modalDateInput.value = today;
+            }
+        });
+    </script>
+
+
+    <style>
+        #timelineWrapper {
+            width: 100%;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+
+        .g-scale {
+            display: flex;
+            margin-bottom: .5rem;
+            font-size: 12px;
+            color: #555;
+        }
+
+        .g-scale-label-spacer {
+            width: 160px;
+        }
+
+        .g-scale-track {
+            flex: 1;
+            position: relative;
+            height: 20px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .g-scale-tick {
+            position: absolute;
+            transform: translateX(-50%);
+            bottom: 0;
+            white-space: nowrap;
+        }
+
+        .g-rows {
+            width: 100%;
+        }
+
+        .g-row {
+            display: flex;
+            min-height: 48px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .g-row-label {
+            width: 160px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .g-row-track {
+            flex: 1;
+            position: relative;
+            background: #fff;
+        }
+
+        .g-bar {
+            position: absolute;
+            top: 4px;
+            height: 40px;
+            background: #8ec5ff;
+            border: 1px solid #4a86c5;
+            border-radius: 4px;
+            padding: 2px 4px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .g-bar-text {
+            font-weight: 600;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .g-bar-time {
+            font-size: 11px;
+        }
+
+        .g-now-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.1); /* nền mờ */
+            border-right: 2px solid red; /* vạch đỏ chạy */
+            z-index: 5;
+            pointer-events: none;
+        }
+    </style>
+}

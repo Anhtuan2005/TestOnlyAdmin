@@ -1,0 +1,30 @@
+﻿@model List<HubCinemaAdmin.Models.FoodDTO>
+
+@if (Model == null || !Model.Any())
+{
+    <p>Không có món ăn nào đang bán tại rạp này.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var food in Model)
+        {
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 hover"  onclick="window.location='@Url.Action("EditFood", "FoodManagement", new { idFood = food.IDFood })'">
+                    <img src="@food.ImageURL" class="card-img-top" alt="@food.FoodName" style="height:200px; object-fit:cover;" />
+                    <div class="card-body">
+                        <h5 class="card-title">@food.FoodName</h5>
+                        <p class="card-text">@food.Description</p>
+                        <p class="text-danger fw-bold">@food.Price.ToString("N0") ₫</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .hover{
+        cursor: pointer;
+    }
+</style>

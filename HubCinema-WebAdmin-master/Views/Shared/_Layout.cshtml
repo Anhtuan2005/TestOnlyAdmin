@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Dashboard - SB Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+    <link href="~/css/style.css" rel="stylesheet" />
+    <link href="~/css/ListMovie.css" rel="stylesheet"/>
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+</head>
+<body class="sb-nav-fixed">
+    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+        <a class="navbar-brand ps-3" href="index.html">HUB CINEMA</a>
+        <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+        <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+            <div class="input-group">
+                <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
+                <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
+        <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="#!">Settings</a></li>
+                    <li><a class="dropdown-item" href="#!">Activity Log</a></li>
+                    <li><hr class="dropdown-divider" /></li>
+                    <li><a class="dropdown-item" href="#!">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+    <div id="layoutSidenav">
+        <div id="layoutSidenav_nav">
+            <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                <div class="sb-sidenav-menu">
+                    <div class="nav">
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseDashboard" aria-expanded="false" aria-controls="collapseDashboard">
+                            <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                            Dashboard
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseDashboard">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" href="">Tổng quan</a>
+                                <a class="nav-link" href="">Doanh thu theo phim</a>
+                            </nav>
+                        </div>
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMovie" aria-expanded="false" aria-controls="collapseMovie">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-film"></i></div>
+                            Quản lý phim
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseMovie">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" asp-controller="MovieManagement" asp-action="LoadListMovie">Danh sách phim</a>
+                                <a class="nav-link" asp-controller="MovieManagement" asp-action="Create">Tạo phim</a>
+                            </nav>
+                        </div>
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseTheater" aria-expanded="false" aria-controls="collapseTheater">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-tv"></i></div>
+                            Quản lý rạp phim
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseTheater">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" asp-controller="CinemaManagement" asp-action="LoadListCinema">Danh sách rạp phim</a>
+                                <a class="nav-link" asp-controller="CinemaManagement" asp-action="CreateCinema">Tạp rạp phim</a>
+                            </nav>
+                        </div>
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseCombo" aria-expanded="false" aria-controls="collapseCombo">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-tv"></i></div>
+                            Quản lý combo
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseCombo">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" asp-controller="FoodManagement" asp-action="LoadListCombo">Danh sách combo</a>
+                                <a class="nav-link" asp-controller="FoodManagement" asp-action="CreateFood">Tạp combo</a>
+                            </nav>
+                        </div>
+
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseNews" aria-expanded="false" aria-controls="collapseNews">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-newspaper"></i></div>
+                            Quản lý bài viết
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseNews">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" asp-controller="NewsManagement" asp-action="index">Danh sách bài viết</a>
+                                <a class="nav-link" asp-controller="NewsManagement" asp-action="Create">Tạo bài viết</a>
+                            </nav>
+                        </div>
+
+
+                        <!-- Quản lý suất chiếu -->
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseSchedule" aria-expanded="false" aria-controls="collapseSchedule">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-display"></i></div>
+                            Quản lý suất chiếu
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseSchedule">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" asp-controller="ShowtimeManagement" asp-action="Timeline">Timeline</a>
+                            </nav>
+                        </div>
+
+                        <!-- Quản lý hóa đơn -->
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseInvoice" aria-expanded="false" aria-controls="collapseInvoice">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                            Quản lý hóa đơn
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseInvoice">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" asp-area="Admin" asp-controller="Invoice" asp-action="Index">Danh sách hóa đơn</a>
+                            </nav>
+                        </div>
+
+                        <!-- Quản lý giá vé -->
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseTicket" aria-expanded="false" aria-controls="collapseTicket">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-ticket"></i></div>
+                            Quản lý giá vé
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseTicket">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" asp-controller="SeatTypeInRoomAdmin" asp-action="Index">Danh sách loại ghế</a>
+                            </nav>
+                        </div>
+
+
+                        <!-- Quản lý khuyến mãi -->
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePromo" aria-expanded="false" aria-controls="collapsePromo">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-percent"></i></div>
+                            Quản lý khuyến mãi
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapsePromo">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" href="#">Danh sách mã giảm</a>
+                            </nav>
+                        </div>
+
+                        <!-- Quản lý người dùng -->
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseUser" aria-expanded="false" aria-controls="collapseUser">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-users"></i></div>
+                            Quản lý người dùng
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+
+                        <div class="collapse" id="collapseUser">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" href="@Url.Action("Index", "UserAdmin")">Danh sách người dùng</a>
+                            </nav>
+                        </div>
+
+
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseBanner" aria-expanded="false" aria-controls="collapseBanner">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-image"></i></div>
+                            Quản lý banner
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseBanner">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link" asp-area="Admin" asp-controller="BannerAdmin" asp-action="Index">Danh sách banner</a>
+                                <a class="nav-link" asp-area="Admin" asp-controller="BannerAdmin" asp-action="Create">Tạo banner</a>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div id="layoutSidenav_content">
+            <main>
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+    <footer class="py-4 bg-light mt-auto">
+        <div class="container-fluid px-4">
+            <div class="d-flex align-items-center justify-content-between small">
+                <div class="text-muted">Copyright &copy; Your Website 2025</div>
+                <div>
+                    <a href="#">Privacy Policy</a>
+                    &middot;
+                    <a href="#">Terms &amp; Conditions</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    @RenderSection("Scripts", required: false)
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+﻿@model HubCinemaAdmin.Models.Banner
+
+@{
+    ViewData["Title"] = "Tạo Banner";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow rounded">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i> Tạo banner mới</h5>
+                    <a asp-action="Index" class="btn btn-sm btn-light text-dark">
+                        <i class="fas fa-arrow-left me-1"></i> Quay lại
+                    </a>
+                </div>
+                <div class="card-body">
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger">@ViewBag.Error</div>
+                    }
+
+                    <form asp-action="Create" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label fw-bold">Tiêu đề</label>
+                            <input asp-for="Title" class="form-control" />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageFile" class="form-label fw-bold">Chọn ảnh từ máy</label>
+                            <input asp-for="ImageFile" type="file" class="form-control" onchange="previewImage(this)" />
+                            <div class="mt-2">
+                                <img id="previewImg" class="img-thumbnail rounded" style="max-height: 120px; display: none;" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ImageUrl" class="form-label fw-bold">Hoặc nhập URL ảnh</label>
+                            <input asp-for="ImageUrl" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="LinkUrl" class="form-label fw-bold">Đường dẫn chuyển hướng</label>
+                            <input asp-for="LinkUrl" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="DisplayOrder" class="form-label fw-bold">Thứ tự hiển thị</label>
+                            <input asp-for="DisplayOrder" class="form-control" />
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" asp-for="IsActive" />
+                            <label class="form-check-label fw-bold" asp-for="IsActive">Kích hoạt</label>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check-circle me-1"></i> Tạo
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Hủy
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function previewImage(input) {
+            const file = input.files[0];
+            const preview = document.getElementById("previewImg");
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.src = e.target.result;
+                    preview.style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = "none";
+            }
+        }
+    </script>
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

@@ -1,0 +1,19 @@
+﻿.title {
+    text-align: center;
+    color: #E48600;
+}
+
+.badge-category {
+    margin-right: 3px;
+}
+
+.badge-public {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-date {
+    background-color: #ffe0b2;
+    color: #e65100;
+}
+

@@ -1,0 +1,71 @@
+﻿@model IEnumerable<HubCinemaAdmin.Models.News>
+
+@{
+    ViewData["Title"] = "Danh sách bài viết";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Danh sách bài viết</h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Tạo bài viết mới
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle shadow-sm bg-white">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>#</th>
+                        <th>Tiêu đề</th>
+                        <th>Phụ đề</th>
+                        <th>Slug</th>
+                        <th>Thumbnail</th>
+                        <th>Trạng thái</th>
+                        <th>Danh mục</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center">@item.Id</td>
+                            <td>@item.Title</td>
+                            <td>@item.Subtitle</td>
+                            <td>@item.Slug</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Thumbnail))
+                                {
+                                    <img src="@item.Thumbnail" alt="thumbnail" class="img-thumbnail" style="width: 80px; height: auto;" />
+                                }
+                            </td>
+                            <td class="text-center">
+                                @if (item.Status == "true")
+                                {
+                                    <span class="badge bg-success">Hiển thị</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Ẩn</span>
+                                }
+                            </td>
+                            <td>@item.Category</td>
+                            <td class="text-center">
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xoá?');">
+                                    <i class="bi bi-trash"></i> Xoá
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">Chưa có bài viết nào.</div>
+    }
+</div>

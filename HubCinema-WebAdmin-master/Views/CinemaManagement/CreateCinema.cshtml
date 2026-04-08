@@ -1,0 +1,48 @@
+﻿@model HubCinemaAdmin.Models.CinemaDTO
+
+@{
+    ViewData["Title"] = "Create Cinema";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="card shadow-lg rounded">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Create New Cinema</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="CreateCinema" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="CinemaName" class="form-label"></label>
+                    <input asp-for="CinemaName" class="form-control" />
+                    <span asp-validation-for="CinemaName" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Address" class="form-label"></label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="City" class="form-label"></label>
+                    <input asp-for="City" class="form-control" />
+                    <span asp-validation-for="City" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a asp-action="Index" class="btn btn-outline-secondary">← Back to List</a>
+                    <button type="submit" class="btn btn-success">Create Cinema</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

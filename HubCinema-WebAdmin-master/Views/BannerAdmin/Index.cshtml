@@ -1,0 +1,95 @@
+﻿@model List<HubCinemaAdmin.Models.Banner>
+
+@{
+    ViewData["Title"] = "Quản lý Banner";
+}
+
+<div class="container" style="max-width: 1200px;">
+    <div class="d-flex justify-content-between align-items-center mt-3 mb-4">
+        <h2 class="fw-bold text-primary fs-5">Danh sách banner</h2>
+        <a asp-action="Create" class="btn btn-sm btn-success shadow-sm">
+            <i class="fas fa-plus me-1"></i> Thêm banner mới
+        </a>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">@ViewBag.Error</div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-warning">Không có banner nào được tìm thấy.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-sm align-middle text-center">
+                <thead class="table-dark small text-uppercase">
+                    <tr>
+                        <th>#</th>
+                        <th>Tiêu đề</th>
+                        <th>Ảnh</th>
+                        <th>Link</th>
+                        <th>Thứ tự</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var banner = Model[i];
+                        <tr>
+                            <td>@(i + 1)</td>
+                            <td class="text-start">@banner.Title</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(banner.ImageUrl))
+                                {
+                                    <img src="@banner.ImageUrl" class="img-thumbnail" style="height: 60px;" />
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(banner.LinkUrl))
+                                {
+                                    <a href="@banner.LinkUrl" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-link"></i> Mở link
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small fst-italic">Không có</span>
+                                }
+                            </td>
+                            <td>@banner.DisplayOrder</td>
+                            <td>
+                                @if (banner.IsActive)
+                                {
+                                    <span class="badge bg-success px-3 py-2">Hiển thị</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary px-3 py-2">Ẩn</span>
+                                }
+                            </td>
+                            <td>@banner.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <div class="d-flex justify-content-center">
+                                    <a asp-action="Edit" asp-route-id="@banner.BannerId" class="btn btn-sm btn-outline-warning me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@banner.BannerId"
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Bạn có chắc chắn muốn xóa banner này không?');">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
